@@ -2,7 +2,7 @@
 import time
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_appbuilder import AppBuilder, SQLA
+from flask_appbuilder import AppBuilder, SQLA 
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder import ModelView
 from sqlalchemy.exc import OperationalError
