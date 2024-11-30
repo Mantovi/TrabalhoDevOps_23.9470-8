@@ -44,24 +44,40 @@ services:
     environment:
       TEST_DB_URI: mysql+pymysql://flask_user:flask_password@mariadb:3306/test_school_db
 
-# Comentado para uso futuro (Prometheus e Grafana)
-#   prometheus:
-#     image: prom/prometheus:latest
-#     volumes:
-#       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-#     ports:
-#       - "9090:9090"
-#     depends_on:
-#       - flask_app
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - mysqld_exporter
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
 
-#   grafana:
-#     image: grafana/grafana:latest
-#     ports:
-#       - "3000:3000"
-#     volumes:
-#       - grafana_data:/var/lib/grafana
-#     depends_on:
-#       - prometheus
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile_grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  mysqld_exporter:
+    image: prom/mysqld-exporter
+    ports:
+      - "9104:9104"
+    environment:
+      DATA_SOURCE_NAME: "user:password@(mariadb:3306)/"
+    depends_on:
+      - mariadb
+
+
+
+
+
+
 
 volumes:
   db_data:
