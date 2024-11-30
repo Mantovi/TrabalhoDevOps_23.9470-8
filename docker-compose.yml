@@ -1,14 +1,12 @@
-version: "3.7"
-
 services:
   flask:
     build:
       context: ./flask
       dockerfile: Dockerfile_flask
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
-      - DATABASE_URL=mysql+pymysql://flask_user:flask_password@mariadb:3306/school_db
+      - DATABASE_URL=mysql+pymysql://flask_user:flask_password@mariadb:3307/school_db
     depends_on:
       - mariadb
 
@@ -17,7 +15,7 @@ services:
       context: ./mariadb
       dockerfile: Dockerfile_mariadb
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: school_db
@@ -33,16 +31,16 @@ services:
       - mariadb
       - flask
     environment:
-      - DATABASE_URL=mysql+pymysql://flask_user:flask_password@mariadb:3306/school_db
+      - DATABASE_URL=mysql+pymysql://flask_user:flask_password@mariadb:3307/school_db
     networks:
       - default
 
   prometheus:
     image: prom/prometheus
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
-      - "9090:9090"
+      - "9091:9090"
     depends_on:
       - mysqld_exporter
     command:
@@ -51,12 +49,11 @@ services:
   mysqld_exporter:
     image: prom/mysqld-exporter
     environment:
-      - DATA_SOURCE_NAME=flask_user:flask_password@(mariadb:3306)/school_db
+      - DATA_SOURCE_NAME=flask_user:flask_password@(mariadb:3307)/school_db
     ports:
-      - "9104:9104"
+      - "9105:9104"
     depends_on:
       - mariadb
-
 
   grafana:
     build:

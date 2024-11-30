@@ -1,4 +1,5 @@
 import pytest
+from flask import Flask
 from flask.testing import FlaskClient
 from app import app, db, Aluno
 

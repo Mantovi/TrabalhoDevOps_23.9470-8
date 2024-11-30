@@ -7,7 +7,7 @@ pipeline {
             steps {
                 script {
                     git branch: "main", url:"https://github.com/Mantovi/TrabalhoDevOps_23.9470-8.git"
-                     sh 'docker-compose down -v'
+                    sh 'docker-compose down -v'
                     sh 'docker-compose build'
                 }
             }

@@ -7,5 +7,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 
-# Comando para rodar o servidor Flask
+COPY test_app.py /app/
+
 CMD ["flask", "run", "--host=0.0.0.0"]
