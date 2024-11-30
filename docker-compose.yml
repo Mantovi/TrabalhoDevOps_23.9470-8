@@ -1,46 +1,41 @@
+version: "3.7"
+
 services:
+  flask:
+    build:
+      context: ./flask
+      dockerfile: Dockerfile_flask
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://flask_user:flask_password@mariadb:3306/school_db
+    depends_on:
+      - mariadb
+
   mariadb:
     build:
       context: ./mariadb
       dockerfile: Dockerfile_mariadb
-    container_name: mariadb_container_${BUILD_NUMBER}  # Adiciona o número do build no nome do container
     ports:
-      - "3307:3306"
-    volumes:
-      - db_data:/var/lib/mysql
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: school_db
       MYSQL_USER: flask_user
       MYSQL_PASSWORD: flask_password
 
-  flask_app:
-    build:
-      context: ./flask
-      dockerfile: Dockerfile_flask
-    container_name: flask_app_container_${BUILD_NUMBER}  # Adiciona o número do build no nome do container
-    ports:
-      - "5000:5000"
-    depends_on:
-      - mariadb
-    environment:
-      FLASK_APP: app
-      FLASK_ENV: development
-      FLASK_DB_HOST: mariadb
-      FLASK_DB_USER: flask_user
-      FLASK_DB_PASSWORD: flask_password
-      FLASK_DB_NAME: school_db
-
   test:
     build:
       context: ./flask
       dockerfile: Dockerfile_flask
-    container_name: flask_test_container_${BUILD_NUMBER}  # Adiciona o número do build no nome do container
-    command: ["pytest", "/app/test_app.py", "--disable-warnings"]
+    command: ["pytest", "/app/test_app.py"]
     depends_on:
       - mariadb
+      - flask
     environment:
-      TEST_DB_URI: mysql+pymysql://flask_user:flask_password@mariadb:3306/test_school_db
+      - DATABASE_URL=mysql+pymysql://flask_user:flask_password@mariadb:3306/school_db
+    networks:
+      - default
 
   prometheus:
     image: prom/prometheus
@@ -53,6 +48,16 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
 
+  mysqld_exporter:
+    image: prom/mysqld-exporter
+    environment:
+      - DATA_SOURCE_NAME=mysql://flask_user:flask_password@mariadb:3306/school_db
+    ports:
+      - "9104:9104"
+    depends_on:
+      - mariadb
+
+
   grafana:
     build:
       context: ./grafana
@@ -61,16 +66,3 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
-
-  mysqld_exporter:
-    image: prom/mysqld-exporter
-    ports:
-      - "9104:9104"
-    environment:
-      DATA_SOURCE_NAME: "user:password@(mariadb:3306)/"
-    depends_on:
-      - mariadb
-
-volumes:
-  db_data:
-  grafana_data:
