@@ -1,13 +1,11 @@
-version: '3.9'
-
 services:
   mariadb:
     build:
       context: ./mariadb
       dockerfile: Dockerfile_mariadb
-    container_name: mariadb_container
+    container_name: mariadb_container_${BUILD_NUMBER}  # Adiciona o número do build no nome do container
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
     environment:
@@ -20,7 +18,7 @@ services:
     build:
       context: ./flask
       dockerfile: Dockerfile_flask
-    container_name: flask_app_container
+    container_name: flask_app_container_${BUILD_NUMBER}  # Adiciona o número do build no nome do container
     ports:
       - "5000:5000"
     depends_on:
@@ -37,7 +35,7 @@ services:
     build:
       context: ./flask
       dockerfile: Dockerfile_flask
-    container_name: flask_test_container
+    container_name: flask_test_container_${BUILD_NUMBER}  # Adiciona o número do build no nome do container
     command: ["pytest", "/app/test_app.py", "--disable-warnings"]
     depends_on:
       - mariadb
@@ -72,12 +70,6 @@ services:
       DATA_SOURCE_NAME: "user:password@(mariadb:3306)/"
     depends_on:
       - mariadb
-
-
-
-
-
-
 
 volumes:
   db_data:
