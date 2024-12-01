@@ -1,24 +1,27 @@
 pipeline {
     agent any
 
-
     stages {
-        stage('Git pull and build') {
+        stage('Prepare Environment') {
+            steps {
+                sh 'mkdir -p $WORKSPACE/prometheus'
+                sh 'touch $WORKSPACE/prometheus/prometheus.yml'
+            }
+        }
+        stage('Git Pull & Build Containers') {
             steps {
                 script {
-                    git branch: "main", url:"https://github.com/Mantovi/TrabalhoDevOps_23.9470-8.git"
-                    sh 'docker-compose down -v'
+                    git branch: "main", url: "https://github.com/Mantovi/TrabalhoDevOps_23.9470-8.git"
+                    sh 'docker-compose down -v || true'
                     sh 'docker-compose build'
                 }
             }
         }
-
         stage('Start Containers & Run Tests') {
             steps {
                 script {
-                    sh 'docker-compose up -d mariadb flask test mysqld_exporter prometheus grafana'
-                    sh 'sleep 40' 
-
+                    sh 'docker-compose up -d mariadb flask mysqld_exporter prometheus grafana'
+                    sh 'sleep 30' 
                     try {
                         sh 'docker-compose run --rm test'
                     } catch (Exception e) {
@@ -28,11 +31,10 @@ pipeline {
                 }
             }
         }
-
         stage('Keep Application Running') {
             steps {
                 script {
-                    sh 'docker-compose up -d mariadb flask test mysqld_exporter prometheus grafana'
+                    sh 'docker-compose up -d'
                 }
             }
         }
@@ -40,7 +42,7 @@ pipeline {
 
     post {
         failure {
-            sh 'docker-compose down -v'
+            sh 'docker-compose down -v || true'
         }
     }
 }

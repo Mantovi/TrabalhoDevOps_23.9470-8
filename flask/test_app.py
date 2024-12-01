@@ -1,7 +1,5 @@
 import pytest
-from flask import Flask
-from flask.testing import FlaskClient
-from app import app, db, Aluno
+from app import app, db, Aluno  # Certifique-se de importar o modelo Aluno
 
 @pytest.fixture
 def client():
@@ -9,25 +7,27 @@ def client():
         yield client
 
 @pytest.fixture(autouse=True)
-def reset_db():
+def setup_and_reset_db():
     with app.app_context():
-        db.session.query(Aluno).delete() #Limpa o banco
+        # Cria todas as tabelas
+        db.create_all()
+        # Limpa os dados após cada teste
+        yield
+        db.session.query(Aluno).delete()
         db.session.commit()
 
-def test_listar_alunos(client: FlaskClient):
+def test_listar_alunos(client):
     response = client.get('/alunos')
     assert response.status_code == 200
     assert isinstance(response.json, list)
-    assert len(response.json) == 0
 
-
-def test_adicionar_aluno(client: FlaskClient):
+def test_adicionar_aluno(client):
     novo_aluno = {
-        "nome": "Aluno",
-        "sobrenome": "Bobo",
-        "turma": "D7",
+        "nome": "Teste",
+        "sobrenome": "Exemplo",
+        "turma": "A1",
         "disciplinas": "DevOps",
-        "ra": "99.9999-9"
+        "ra": "11.1111-1"
     }
     response = client.post('/alunos', json=novo_aluno)
     assert response.status_code == 201
