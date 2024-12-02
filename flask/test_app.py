@@ -18,12 +18,12 @@ def setup_and_reset_db():
         db.session.query(Aluno).delete()
         db.session.commit()
 
-def test_listar_alunos(client):
+def test_listar_alunos(client: FlaskClient):
     response = client.get('/alunos')
     assert response.status_code == 200
     assert isinstance(response.json, list)
 
-def test_adicionar_aluno(client):
+def test_adicionar_aluno(client: FlaskClient):
     novo_aluno = {
         "nome": "Teste",
         "sobrenome": "Exemplo",
