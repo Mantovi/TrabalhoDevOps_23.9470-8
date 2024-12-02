@@ -141,4 +141,17 @@ docker-compose up --build
 ```
 
 Ao acessar http://localhost:5000, a aplicação estava funcional.
+<<<<<<< HEAD
 ![Imagem da Aplicação Rodando]()
+=======
+
+
+
+
+
+
+
+
+
+
+>>>>>>> 0a7aa7cd890cfe0fd3427f2adee8b631f966faf4
