@@ -140,10 +140,153 @@ Depois os Containers foram iniciados com:
 docker-compose up --build
 ```
 
+Para realizar testes na aplicação, rode o comando:
+```
+docker-compose run --rm test
+```
+![Imagem dos testes funcionando](https://github.com/Mantovi/TrabalhoDevOps_23.9470-8/blob/main/imagens/Captura%20de%20tela%202024-12-02%20182541.png?raw=true)
+
+
 Ao acessar http://localhost:5000, a aplicação estava funcional.
-<<<<<<< HEAD
-![Imagem da Aplicação Rodando]()
-=======
+![Imagem da Aplicação Rodando](https://github.com/Mantovi/TrabalhoDevOps_23.9470-8/blob/main/imagens/Captura%20de%20tela%202024-12-02%20124941.png?raw=true)
+
+## Grafana e Prometheus
+
+Foi adicionada uma estrutura de pastas para configurar os serviços do Grafana e Prometheus.
+Na pasta grafana, o arquivo Dockerfile_grafana é usado para criar uma imagem Docker personalizada do Grafana, onde são configurados ajustes específicos para o ambiente. Isso inclui configurações de dashboards, plugins e integrações necessárias. O código está assim:
+```
+FROM grafana/grafana:latest
+
+USER root
+
+RUN mkdir /var/lib/grafana/dashboards
+
+COPY provisioning/datasource.yml /etc/grafana/provisioning/datasources/
+COPY provisioning/dashboard.yml /etc/grafana/provisioning/dashboards/
+COPY dashboards/mariadb_dashboard.json /var/lib/grafana/dashboards/
+
+RUN chown -R 472:472 /etc/grafana/provisioning
+
+USER grafana
+```
+
+Na pasta dashboards do Grafana, encontra-se um arquivo **mariadb_dashboard.json** destinado a um dashboard pré-configurado que descreve os painéis e as métricas específicas para acompanhar o desempenho de um banco de dados MariaDB. Ele detalha os painéis, as métricas observadas e a integração com as fontes de dados.
+
+Na pasta provisioning, existem dois arquivos: **datasource.yml** e **dashboard.yml**, ambos projetados para automatizar a configuração de fontes de dados e dashboards. Essas automações eliminam a necessidade de realizar as configurações manualmente na interface do Grafana, aplicando-as automaticamente ao iniciar.
+
+**datasource.yml:** Define fontes de dados, como Prometheus, MySQL ou Elasticsearch, utilizando arquivos no formato YML.
+**dashboard.yml:** Especifica a localização dos arquivos JSON que contêm as definições dos dashboards para provisionamento automático.
+
+**datasource.yml**
+```
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 5s
+```
+
+**dashboard.yml**
+```
+apiVersion: 1
+
+providers:
+  - name: "MariaDB Dashboards"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards
+```
+
+Na pasta prometheus, o arquivo prometheus.yml contém a configuração central do Prometheus, onde estão definidas:
+
+Fontes de coleta de métricas (targets).
+Parâmetros de coleta (frequência e regras de scrape).
+Configuração de alertas (via Alertmanager).
+Ajustes gerais de armazenamento e operação.
+
+```
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "mysqld_exporter"
+    static_configs:
+      - targets: ["mysqld_exporter:9104"]
+```
+
+Arquivo **Jenkinsfile:**
+```
+pipeline {
+    agent any
+
+    stages {
+        // stage('Prepare Environment') {
+        //     steps {
+        //         sh 'mkdir -p $WORKSPACE/prometheus'
+        //         sh 'touch $WORKSPACE/prometheus/prometheus.yml'
+        //     }
+        // }
+        stage('Git Pull & Build Containers') {
+            steps {
+                script {
+                    git branch: "main", url: "https://github.com/Mantovi/TrabalhoDevOps_23.9470-8.git"
+                    sh 'docker-compose down -v || true'
+                    sh 'docker-compose build'
+                }
+            }
+        }
+        stage('Start Containers & Run Tests') {
+            steps {
+                script {
+                    sh 'docker-compose up -d mariadb flask mysqld_exporter prometheus grafana'
+                    sh 'sleep 30' 
+                    try {
+                        sh 'docker-compose run --rm test'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error "Testes falharam. Pipeline interrompido."
+                    }
+                }
+            }
+        }
+        stage('Keep Application Running') {
+            steps {
+                script {
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            sh 'docker-compose down -v || true'
+        }
+    }
+}
+```
+
+
+Agora acessando o Grafana, na `localhost:3000`, faça o Login no Grafana, e clique em dashboards para vizualizar as métricas
+Recomendo alterar a opção **time range** para 5 minutos
+![Imagem dos Dashboards](https://github.com/Mantovi/TrabalhoDevOps_23.9470-8/blob/main/imagens/M%C3%A9tricas.png?raw=true)
+
+
+
+
 
 
 
