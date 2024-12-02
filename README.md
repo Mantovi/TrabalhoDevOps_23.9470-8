@@ -90,7 +90,64 @@ services:
 
 networks:
   prom-network:  # Rede personalizada para garantir a comunicação entre containers
-    driver: bridge ```
+    driver: bridge
+```
+
+O arquivo requirements.txt foi adicionado ao diretório flask para especificar as dependências:
+```
+Flask==1.1.4  # Compatível com Flask-AppBuilder
+Flask-SQLAlchemy==2.4.4  # Extensão para integração do Flask com SQLAlchemy
+PyMySQL==0.9.3  # Conexão do Python com o banco de dados MariaDB
+Flask-AppBuilder==3.3.0  # Compatível com a versão 1.x do Flask
+Werkzeug==1.0.1  # Versão do Werkzeug compatível, para evitar problemas de importação
+MarkupSafe==2.0.1  # Compatível com Jinja2 e Flask
+WTForms==2.3.3  # Versão compatível com Flask-AppBuilder, inclui o módulo 'compat'
+prometheus-flask-exporter==0.18.3  # Exportador de métricas Prometheus para Flask
+pytest==6.2.5  # Framework de testes para Python
+pytest-flask==1.2.0  # Extensão do pytest para testar aplicações Flask
+Flask-Testing==0.8.0  # Biblioteca para testes unitários com Flask
+```
+
+O Dockerfile_flask foi criado para determinar o ambiente de trabalho do Flask:
+```
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py /app/
+COPY test_app.py /app/
+
+CMD ["flask", "run", "--host=0.0.0.0"]
+```
+
+## Banco de Dados
+Para o MariaDB, foi criada a pasta mariadb com o arquivo Dockerfile_mariadb:
+```
+FROM mariadb:10.5
+
+ENV MYSQL_ROOT_PASSWORD=root_password
+ENV MYSQL_DATABASE=school_db
+ENV MYSQL_USER=flask_user
+ENV MYSQL_PASSWORD=flask_password
+
+EXPOSE 3306
+```
+Depois os Containers foram iniciados com:
+```
+docker-compose up --build
+```
+
+Ao acessar http://localhost:5000, a aplicação estava funcional.
+
+
+
+
+
+
+
 
 
 
