@@ -14,8 +14,8 @@
 Foi criado na raiz do projeto o arquivo docker-compose, para configuração de containers
 `docker-compose.yml`
 Em seguida foi adicionado nele, o seguinte código:
-` version: '3.8'
-
+```
+version: '3.8'
 services:
   mariadb:
     build:
@@ -90,7 +90,7 @@ services:
 
 networks:
   prom-network:  # Rede personalizada para garantir a comunicação entre containers
-    driver: bridge `
+    driver: bridge ```
 
 
 
