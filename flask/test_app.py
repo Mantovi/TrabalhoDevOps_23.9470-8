@@ -1,5 +1,7 @@
 import pytest
-from app import app, db, Aluno  # Certifique-se de importar o modelo Aluno
+from flask import Flask
+from flask.testing import FlaskClient
+from app import app, db, Aluno  
 
 @pytest.fixture
 def client():

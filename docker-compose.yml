@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mariadb:
     build:
@@ -10,6 +12,8 @@ services:
       MYSQL_DATABASE: school_db
       MYSQL_USER: flask_user
       MYSQL_PASSWORD: flask_password
+    networks:
+      - prom-network  # Adicionando à rede personalizada
 
   flask:
     build:
@@ -21,6 +25,8 @@ services:
       - DATABASE_URL=mysql+pymysql://flask_user:flask_password@mariadb:3306/school_db
     depends_on:
       - mariadb
+    networks:
+      - prom-network  # Adicionando à rede personalizada
 
   test:
     build:
@@ -32,6 +38,8 @@ services:
       - flask
     environment:
       - DATABASE_URL=mysql+pymysql://flask_user:flask_password@mariadb:3306/school_db
+    networks:
+      - prom-network  # Adicionando à rede personalizada
 
   prometheus:
     image: prom/prometheus
@@ -41,11 +49,13 @@ services:
       - "9090:9090"
     depends_on:
       - mysqld_exporter
+    networks:
+      - prom-network  # Adicionando à rede personalizada
 
   mysqld_exporter:
     image: prom/mysqld-exporter
     environment:
-      - DATA_SOURCE_NAME=mysql://flask_user:flask_password@(mariadb:3306)/school_db
+      - DATA_SOURCE_NAME=mysql://flask_user:flask_password@mariadb:3306/school_db
     ports:
       - "9104:9104"
     depends_on:
@@ -56,6 +66,12 @@ services:
       context: ./grafana
       dockerfile: Dockerfile_grafana
     ports:
-      - "3001:3000"
+      - "3000:3000"
     depends_on:
       - prometheus
+    networks:
+      - prom-network  # Adicionando à rede personalizada
+
+networks:
+  prom-network:  # Rede personalizada para garantir a comunicação entre containers
+    driver: bridge

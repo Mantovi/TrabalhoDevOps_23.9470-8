@@ -35,20 +35,29 @@ class Aluno(db.Model):
     disciplinas = db.Column(db.String(100), nullable=False)
     ra = db.Column(db.String(9), nullable=False)
 
-def init_database(attempts=5, delay=5):
-    for attempt in range(attempts):
-        try:
-            with app.app_context():
-                db.create_all()
-                logger.info("Banco de dados inicializado com sucesso.")
-            return
-        except OperationalError as e:
-            if attempt < attempts - 1:
-                logger.warning(f"Tentativa {attempt + 1} de conexão falhou. Tentando novamente em {delay} segundos...")
-                time.sleep(delay)
-            else:
-                logger.error("Não foi possível conectar ao banco de dados após várias tentativas.")
-                raise e
+attempts = 5
+for i in range(attempts):
+    try:
+        with app.app_context():
+            db.create_all()
+            if not appbuilder.sm.find_user(username='admin'):
+                appbuilder.sm.add_user(
+                    username='admin',
+                    first_name='Admin',
+                    last_name='User',
+                    email='admin@admin.com',
+                    role=appbuilder.sm.find_role(appbuilder.sm.auth_role_admin),
+                    password='admin'
+                )
+        logger.info("Banco de dados inicializado com sucesso.")
+        break
+    except OperationalError:
+        if i < attempts - 1:
+            logger.warning("Tentativa de conexão com o banco de dados falhou. Tentando novamente em 5 segundos...")
+            time.sleep(5)  # Aguarda 5 segundos antes de tentar novamente
+        else:
+            logger.error("Não foi possível conectar ao banco de dados após várias tentativas.")
+            raise
 
 class AlunoModelView(ModelView):
     datamodel = SQLAInterface(Aluno)
@@ -86,5 +95,4 @@ def adicionar_aluno():
     return jsonify({'message': 'Aluno adicionado com sucesso!'}), 201
 
 if __name__ == '__main__':
-    init_database()
     app.run(host='0.0.0.0', port=5000, debug=True)

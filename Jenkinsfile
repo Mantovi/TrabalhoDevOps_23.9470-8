@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     stages {
-        stage('Prepare Environment') {
-            steps {
-                sh 'mkdir -p $WORKSPACE/prometheus'
-                sh 'touch $WORKSPACE/prometheus/prometheus.yml'
-            }
-        }
+        // stage('Prepare Environment') {
+        //     steps {
+        //         sh 'mkdir -p $WORKSPACE/prometheus'
+        //         sh 'touch $WORKSPACE/prometheus/prometheus.yml'
+        //     }
+        // }
         stage('Git Pull & Build Containers') {
             steps {
                 script {
